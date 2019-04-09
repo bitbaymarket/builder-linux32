@@ -1,0 +1,15 @@
+services:
+  - docker
+
+before_install:
+  - docker pull ubuntu:trusty
+
+script:
+  - docker build -t bitbayofficial/builder-linux32:latest .
+
+deploy:
+  provider: script
+  script: sh "./deploy.sh"
+  on:
+    branch: master
+
