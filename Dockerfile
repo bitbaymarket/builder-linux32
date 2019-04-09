@@ -39,26 +39,29 @@ RUN apt-get install -y libqrencode-dev:i386
 RUN apt-get install -y qt59-meta-minimal:i386
 RUN apt-get install -y qt59tools:i386
 
+ENV LD_LIBRARY_PATH "/opt/qt59/lib/x86_64-linux-gnu:/opt/qt59/lib"
+ENV PATH "/opt/qt59/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PKG_CONFIG_PATH "/opt/qt59/lib/pkgconfig"
+ENV QTDIR "/opt/qt59"
+
 RUN apt-get install -y curl
 RUN apt-get install -y fuse
 RUN chmod 644 /etc/fuse.conf
 
 ENV BASE1 https://github.com/bitbaymarket/bitbay-prebuilt-libs1/releases/download/base1
-#RUN curl -fsSL -o /usr/bin/linuxdeployqt $BASE1/linuxdeployqt-continuous-x86_64.AppImage
-#RUN chmod 755 /usr/bin/linuxdeployqt
-
 RUN curl -fsSL -o appimagetool $BASE1/appimagetool-i686.AppImage
 RUN chmod 755 appimagetool
 RUN mv appimagetool /usr/bin
 
 RUN curl -fsSL -o linuxdeployqt-continuous.tar.gz $BASE1/linuxdeployqt-continuous.tar.gz
 RUN tar -zxf linuxdeployqt-continuous.tar.gz
-
 WORKDIR /mnt/linuxdeployqt-continuous
-RUN bash -c "export PATH=`pwd`:$PATH && source /opt/qt59/bin/qt59-env.sh && export && qmake QMAKE_CFLAGS+=-m32 QMAKE_CXXFLAGS+=-m32 QMAKE_LFLAGS+=-m32 && make -j2"
+RUN bash -c "export PATH=`pwd`:$PATH && export && qmake QMAKE_CFLAGS+=-m32 QMAKE_CXXFLAGS+=-m32 QMAKE_LFLAGS+=-m32 && make -j2"
 RUN ls -al bin
 RUN mv bin/linuxdeployqt /usr/bin
 
 WORKDIR /mnt
 RUN rm -rf linuxdeployqt-continuous*
 RUN ls -al
+
+RUN qmake -v
