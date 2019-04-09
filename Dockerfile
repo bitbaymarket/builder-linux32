@@ -61,7 +61,17 @@ RUN ls -al bin
 RUN mv bin/linuxdeployqt /usr/bin
 
 WORKDIR /mnt
-RUN rm -rf linuxdeployqt-continuous*
+RUN curl -fsSL -o patchelf.tar.gz $BASE1/patchelf-0.9.tar.gz
+RUN tar -zxf patchelf.tar.gz
+WORKDIR /mnt/patchelf-0.9
+RUN apt-get install -y autoconf
+RUN ./bootstrap.sh
+RUN ./configure --prefix=/usr
+RUN make -j2
+RUN sudo make install
+
+WORKDIR /mnt
+RUN rm -rf linuxdeployqt-continuous* patchelf*
 RUN ls -al
 
 RUN qmake -v
