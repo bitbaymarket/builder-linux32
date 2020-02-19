@@ -1,0 +1,69 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=qt5-qttools
+_pkgname=${pkgname/qt5-//}-everywhere-src
+pkgver=5.12.1
+_ver=${pkgver/_/-}
+_ver=${_ver/beta0/beta}
+_ver=${_ver/rc0/rc}
+_V=${_ver/rc/RC}
+pkgrel=0
+pkgdesc="Qt5 - QtTool components"
+url="http://qt-project.org/"
+arch="all"
+license="LGPL-2.0 with exceptions or GPL-3.0 with exceptions"
+makedepends="qt5-qtbase-dev"
+subpackages="$pkgname-dev"
+
+case $pkgver in
+*_beta*|*_rc*) _rel=development_releases;;
+*) _rel=official_releases;;
+esac
+source="http://download.qt-project.org/$_rel/qt/${pkgver%.*}/$_ver/submodules/$_pkgname-$_V.tar.xz"
+
+_qt5_prefix=/usr/lib/qt5
+builddir="$srcdir"/$_pkgname-${_V%-*}
+
+build() {
+	cd "$builddir"
+	qmake-qt5 && cd src/linguist/lrelease && ls -al && qmake-qt5 && make -j32
+	cd "$builddir"
+	qmake-qt5 && cd src/linguist/lupdate  && ls -al && qmake-qt5 && make -j32
+	cd "$builddir"
+	qmake-qt5 && cd src/linguist/lconvert && ls -al && qmake-qt5 && make -j32
+	cd "$builddir"
+}
+
+package() {
+	cd "$builddir"
+	cd src/linguist/lrelease && make install INSTALL_ROOT="$pkgdir"
+	cd "$builddir"
+	cd src/linguist/lupdate  && make install INSTALL_ROOT="$pkgdir"
+	cd "$builddir"
+	cd src/linguist/lconvert && make install INSTALL_ROOT="$pkgdir"
+	cd "$builddir"
+
+	# -qt5 symlinks
+	mkdir -p "$pkgdir"/usr/bin/
+	for i in "$pkgdir"/$_qt5_prefix/bin/*; do
+		ln -s ../lib/qt5/bin/${i##*/} "$pkgdir"/usr/bin/${i##*/}-qt5
+	done
+}
+
+_mv_files() {
+	local i
+	for i in "$@"; do
+		mkdir -p "$subpkgdir"/${i%/*}
+		mv "$pkgdir"/$i "$subpkgdir"/$i
+	done
+}
+
+dev() {
+	default_dev
+	cd "$pkgdir"
+	for i in lconvert lrelease lupdate; do
+
+		_mv_files $_qt5_prefix/bin/$i usr/bin/$i-qt5
+	done
+}
+
+sha512sums="e3ae1974f0b20bad1b86d038c3585753183b8c24c133393e3ecf65a0487402ad8dcf8147bf263e9a4c2d3abef1b706981943fcf5268726e424f1b61f69ce4f2e  qttools-everywhere-src-5.12.1.tar.xz"
